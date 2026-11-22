@@ -5,22 +5,22 @@
     <title>Strona główna</title>
 </head>
 <body>
-    <a href="#">Dodaj element do magazynu</a><br>
+    <a href="{{ url_for('add_part') }}">Dodaj część do magazynu</a><br>
     <a href="#">Kosz</a><br>
     <form method="post">
-        <h2>Wyszukaj element według ID</h2>
-        <input type="text" name="id_search" placeholder="ID elementu"/>
-        <button type="submit">Wyszukaj element</button>
+        <h2>Wyszukaj część według ID</h2>
+        <input type="text" name="id_search" placeholder="ID części"/>
+        <button type="submit">Wyszukaj część</button>
     </form><br>
     <form method="post">
-        <h2>Usuń element z magazynu według ID</h2>
-        <input type="text" name="id_del" placeholder="ID elementu"/>
-        <button type="submit">Usuń element</button>
+        <h2>Usuń część z magazynu według ID</h2>
+        <input type="text" name="id_del" placeholder="ID części"/>
+        <button type="submit">Usuń część</button>
     </form><br>
     <form method="post">
-        <h2>Wyszukaj element według tagu</h2>
-        <input type="text" name="tag_element" placeholder="tag"/>
-        <button type="submit">Wyszukaj element</button>
+        <h2>Wyszukaj część według tagu</h2>
+        <input type="text" name="tag_part" placeholder="tag"/>
+        <button type="submit">Wyszukaj część</button>
     </form>
 </body>
 </html>
