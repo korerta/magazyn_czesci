@@ -99,8 +99,9 @@ def add_part(name_part: str, desc_part: str, condition_part: str, oem_part: str,
         return False
 
 # Zwrócenie wszystkich części
-def return_parts() -> dict:
+def return_parts(deleted: bool) -> dict:
     """
+    :param deleted: Bool zwrócić dostępne czy usunięte True - Usunięte, False - Dostępne
     Zwrócenie wszystkich części
     :return: Zwraca dict z częściami
     """
@@ -113,7 +114,11 @@ def return_parts() -> dict:
         try:
             cursor = res_conn['cursor']
 
-            cursor.execute("SELECT * FROM parts")
+            if deleted:
+                cursor.execute("SELECT * FROM parts WHERE deleted=1")
+            else:
+                cursor.execute("SELECT * FROM parts WHERE deleted=0")
+
             data_return['result'] = cursor.fetchall()
             data_return['status'] = True
 
@@ -170,5 +175,48 @@ def return_part(id_part: int) -> dict:
         data_return['error'] = 'Błąd podczas zwracania rezultatu w return_part'
 
     return data_return
+
+# Dodanie części z kosza do magazynu
+def return_part_back(id_part: int) -> bool:
+    """
+    Dodanie części do magazynu
+    :param id_part: Identyfikator części
+    :return: Zwraca bool czy się udało
+    """
+
+    data_conn_cursor = conn_cursor()  # Połączenie z bazą danych
+
+    # Jeśli nie zwróciło żadnego błędu
+    if data_conn_cursor['status']:
+        cursor = data_conn_cursor['cursor']
+        conn = data_conn_cursor['conn']
+
+        try:
+            query = "UPDATE parts SET deleted= 0 WHERE id= ?"
+            cursor.execute(query, (id_part,))
+            conn.commit()
+            return True
+
+        except Exception as error:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            print('Błąd podczas zwracania rezultatu w return_part_back, błąd:', error)
+            return False
+
+        finally:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
+            close_connection(conn)
+
+    # Jeśli zwróciło błąd
+    else:
+        print('Błąd podczas zwracania rezultatu w return_part_back.')
+        return False
+
 
 # endregion

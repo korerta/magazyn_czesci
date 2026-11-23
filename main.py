@@ -1,13 +1,11 @@
 """
 Serwer WWW
 """
-import os.path
-
 # region importy
 # Biblioteki
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
-import uuid
+import uuid, os
 
 # Moje pliki
 from config import ip, port, debug, paths
@@ -90,11 +88,11 @@ def add_part_form(form: dict, files: dict) -> dict:
 
     return data_return
 
-def return_parts() -> dict:
+def return_parts(deleted: bool) -> dict:
     data_return = {'status': False}
 
     # region pobranie z bazy danych części oraz obsługa błędu
-    parts = database.return_parts()
+    parts = database.return_parts(deleted)
     if not parts['status']:
         data_return['parts'] = ()
         data_return['message'] = 'Wystąpił nieoczekiwany bład podczas pobierania części z bazy danych.'
@@ -153,6 +151,42 @@ def show_part_form(form: dict) -> dict:
 
     return data_return
 
+def return_back_part(form: dict) -> dict:
+    """
+    :param form: Formularz
+    :return: Zwraca dict
+    """
+
+    data_return = {'status': False}
+
+    # region czy jest w adresie URL Identyfikator części
+    if not 'part_id' in form:
+        data_return['message'] = 'Nie znaleziono ID części'
+        return data_return
+    # endregion
+
+    # region czy Identyfikator części jest liczbą
+    try:
+        id_part = int(form['part_id'])
+
+    except Exception as error:
+        print(f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.')
+        data_return['message'] = f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.'
+        return data_return
+    # endregion
+
+    # region czy się udało przywrócić część z kosza do magazynu
+    if not database.return_part_back(id_part):
+        print('Błąd podczas przywracania z kosza części do magazynu.')
+        data_return['message'] = 'Błąd podczas przywracania z kosza części do magazynu.'
+        return data_return
+
+    data_return['status'] = True
+    data_return['message'] = 'Pomyślnie przywrócono z kosza część.'
+
+    return data_return
+
+
 # endregion
 
 # region Konfiguracja flask
@@ -163,7 +197,7 @@ app = Flask(__name__)
 # Strona główna
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    parts = return_parts()
+    parts = return_parts(False)
     return render_template("index.html", data=parts)
 
 # Dodaj część
@@ -185,6 +219,17 @@ def show_part():
         return_data = show_part_form(request.args)
 
     return render_template("show_part.html", data=return_data)
+
+# Kosz
+@app.route("/basket", methods=['GET', 'POST'])
+def basket():
+    parts = return_parts(True)
+    if request.form:
+        result = return_back_part(request.form)
+
+        parts['message'] = result['message']
+
+    return render_template("basket.html", data=parts)
 
 # endregion
 

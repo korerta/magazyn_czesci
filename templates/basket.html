@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kosz</title>
+</head>
+<body>
+    <a href="{{ url_for('home') }}">Strona główna</a><br>
+
+    <center><h2>Usunięte części</h2></center>
+    {{ data['message'] }}
+    <table border="1">
+        <tr>
+            <td>Identyfikator</td>
+            <td>Nazwa części</td>
+            <td>Opis części</td>
+            <td>Data zmagazynowania</td>
+            <td>Stan części</td>
+            <td>Numer OEM</td>
+            <td>Z jakiego pojazdu</td>
+            <td>Miejsce na magazynie</td>
+            <td>Czy zapakowano</td>
+            <td></td>
+        </tr>
+        {% for part in data['parts'] %}
+        <tr>
+            <form method="post">
+                <td><input type="text" disabled value="{{ part[0] }}" /></td>
+                <input type="hidden" name="part_id" value="{{ part[0] }}" />
+                <td>{{ part[1] }}</td>
+                <td>{{ part[2] }}</td>
+                <td>{{ part[3] }}</td>
+                <td>{{ part[4] }}</td>
+                <td>{{ part[5] }}</td>
+                <td>{{ part[6] }}</td>
+                <td>{{ part[7] }}</td>
+                <td>
+                    {% if part[8] == 0 %}
+                    {{ "NIE" }}
+                    {% else %}
+                    {{ "TAK" }}
+                    {% endif %}
+                </td>
+                <td><button type="submit">Przywróć część</button></td>
+            </form>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

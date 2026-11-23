@@ -14,7 +14,7 @@
     </style>
     <div id="form">
         <a href="{{ url_for('add_part') }}">Dodaj część do magazynu</a><br>
-        <a href="#">Kosz</a><br>
+        <a href="{{ url_for('basket') }}">Kosz</a><br>
         <form method="post">
             <h2>Wyszukaj część (numer OEM, Tag, Identyfikator...)</h2>
             <input type="text" name="id_search" placeholder="ID części"/>
@@ -27,7 +27,7 @@
         </form><br>
     </div>
     <div id="parts">
-        <center><h2>Części</h2></center>
+        <center><h2>Dostępne części</h2></center>
         {{ data['message'] }}
         <table border="1">
             <tr>
