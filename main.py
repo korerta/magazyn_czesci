@@ -5,7 +5,7 @@ import os.path
 
 # region importy
 # Biblioteki
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 import uuid
 
@@ -90,6 +90,69 @@ def add_part_form(form: dict, files: dict) -> dict:
 
     return data_return
 
+def return_parts() -> dict:
+    data_return = {'status': False}
+
+    # region pobranie z bazy danych części oraz obsługa błędu
+    parts = database.return_parts()
+    if not parts['status']:
+        data_return['parts'] = ()
+        data_return['message'] = 'Wystąpił nieoczekiwany bład podczas pobierania części z bazy danych.'
+        print('Wystąpił nieoczekiwany bład podczas pobierania części z bazy danych.')
+    # endregion
+
+    data_return['status'] = True
+    data_return['parts'] = parts['result']
+
+    return data_return
+
+def show_part_form(form: dict) -> dict:
+    """
+    :param form: Formularz
+    :return: Zwraca dict
+    """
+    data_return = {'status': False}
+
+    # region czy jest w adresie URL Identyfikator części
+    if not 'part_id' in form:
+        data_return['message'] = 'W adresie URL brak ID części'
+        return data_return
+    # endregion
+
+    # region czy Identyfikator części jest liczbą
+    try:
+        id_part = int(form['part_id'])
+
+    except Exception as error:
+        print(f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.')
+        data_return['message'] = f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.'
+        return data_return
+    # endregion
+
+    # region pobranie z bazy danych części
+    result = database.return_part(id_part)
+    if not result['status']:
+        print('Błąd podczas pobierania części z bazy danych.')
+        data_return['message'] = 'Błąd podczas pobierania części z bazy danych.'
+        return data_return
+
+    data_return['data'] = result['result']
+    # endregion
+
+    uuid = result['result'][9] # UUID
+
+    # region pobranie zdjęć
+    list_photos = []
+    path = os.path.join('static', 'parts', uuid)
+    for file in os.listdir(path):
+        full_path = os.path.join(path, file)
+        list_photos.append(full_path)
+    # endregion
+
+    data_return['photos'] = list_photos
+
+    return data_return
+
 # endregion
 
 # region Konfiguracja flask
@@ -100,7 +163,8 @@ app = Flask(__name__)
 # Strona główna
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    return render_template("index.html")
+    parts = return_parts()
+    return render_template("index.html", data=parts)
 
 # Dodaj część
 @app.route("/add_part", methods=['GET', 'POST'])
@@ -111,6 +175,16 @@ def add_part():
         return_data = add_part_form(request.form, request.files)
 
     return render_template("add_part.html", data=return_data)
+
+# Wyświetl część
+@app.route("/show_part", methods=['GET', 'POST'])
+def show_part():
+    return_data = []
+    # przesłanie formularza
+    if request.args:
+        return_data = show_part_form(request.args)
+
+    return render_template("show_part.html", data=return_data)
 
 # endregion
 

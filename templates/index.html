@@ -5,22 +5,67 @@
     <title>Strona główna</title>
 </head>
 <body>
-    <a href="{{ url_for('add_part') }}">Dodaj część do magazynu</a><br>
-    <a href="#">Kosz</a><br>
-    <form method="post">
-        <h2>Wyszukaj część według ID</h2>
-        <input type="text" name="id_search" placeholder="ID części"/>
-        <button type="submit">Wyszukaj część</button>
-    </form><br>
-    <form method="post">
-        <h2>Usuń część z magazynu według ID</h2>
-        <input type="text" name="id_del" placeholder="ID części"/>
-        <button type="submit">Usuń część</button>
-    </form><br>
-    <form method="post">
-        <h2>Wyszukaj część według tagu</h2>
-        <input type="text" name="tag_part" placeholder="tag"/>
-        <button type="submit">Wyszukaj część</button>
-    </form>
+    <style>
+        #form{
+            border-bottom-color: black;
+            border-bottom-style: solid;
+            border-bottom-width: 5px;
+        }
+    </style>
+    <div id="form">
+        <a href="{{ url_for('add_part') }}">Dodaj część do magazynu</a><br>
+        <a href="#">Kosz</a><br>
+        <form method="post">
+            <h2>Wyszukaj część (numer OEM, Tag, Identyfikator...)</h2>
+            <input type="text" name="id_search" placeholder="ID części"/>
+            <button type="submit">Wyszukaj część</button>
+        </form><br>
+        <form method="post">
+            <h2>Usuń część z magazynu według Identyfikatora</h2>
+            <input type="text" name="id_del" placeholder="ID części"/>
+            <button type="submit">Usuń część</button>
+        </form><br>
+    </div>
+    <div id="parts">
+        <center><h2>Części</h2></center>
+        {{ data['message'] }}
+        <table border="1">
+            <tr>
+                <td>Identyfikator</td>
+                <td>Nazwa części</td>
+                <td>Opis części</td>
+                <td>Data zmagazynowania</td>
+                <td>Stan części</td>
+                <td>Numer OEM</td>
+                <td>Z jakiego pojazdu</td>
+                <td>Miejsce na magazynie</td>
+                <td>Czy zapakowano</td>
+                <td></td>
+            </tr>
+            {% for part in data['parts'] %}
+            <tr>
+                <form method="get" action="show_part">
+                    <td><input type="text" disabled value="{{ part[0] }}" /></td>
+                    <input type="hidden" name="part_id" value="{{ part[0] }}" />
+                    <td>{{ part[1] }}</td>
+                    <td>{{ part[2] }}</td>
+                    <td>{{ part[3] }}</td>
+                    <td>{{ part[4] }}</td>
+                    <td>{{ part[5] }}</td>
+                    <td>{{ part[6] }}</td>
+                    <td>{{ part[7] }}</td>
+                    <td>
+                        {% if part[8] == 0 %}
+                        {{ "NIE" }}
+                        {% else %}
+                        {{ "TAK" }}
+                        {% endif %}
+                    </td>
+                    <td><button type="submit">Wyświetl część</button></td>
+                </form>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </body>
 </html>

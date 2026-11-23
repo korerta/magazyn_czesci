@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ data['data'][1] }}</title>
+</head>
+<body>
+    <style>
+        img{
+            width: 50%;
+            height: 50%;
+            float: left;
+    </style>
+
+    <a href="{{ url_for('home') }}">Strona główna</a><br>
+
+    <table border="1">
+        <tr>
+            <td>Identyfikator</td>
+            <td>Nazwa części</td>
+            <td>Opis części</td>
+            <td>Data zmagazynowania</td>
+            <td>Stan części</td>
+            <td>Numer OEM</td>
+            <td>Z jakiego pojazdu</td>
+            <td>Miejsce na magazynie</td>
+            <td>Czy zapakowano</td>
+        </tr>
+        <tr>
+            <td><input type="text" disabled value="{{ data['data'][0] }}" /></td>
+            <td>{{ data['data'][1] }}</td>
+            <td>{{ data['data'][2] }}</td>
+            <td>{{ data['data'][3] }}</td>
+            <td>{{ data['data'][4] }}</td>
+            <td>{{ data['data'][5] }}</td>
+            <td>{{ data['data'][6] }}</td>
+            <td>{{ data['data'][7] }}</td>
+            <td>
+                {% if data['data'][8] == 0 %}
+                {{ "NIE" }}
+                {% else %}
+                {{ "TAK" }}
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    <br>
+    {% for file in data['photos'] %}
+        <img src="{{ file }}" alt="Zdjęcie części" />
+    {% endfor %}
+</body>
+</html>

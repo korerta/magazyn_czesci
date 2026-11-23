@@ -97,4 +97,78 @@ def add_part(name_part: str, desc_part: str, condition_part: str, oem_part: str,
     else:
         print('Błąd podczas zwracania rezultatu w add_part.')
         return False
+
+# Zwrócenie wszystkich części
+def return_parts() -> dict:
+    """
+    Zwrócenie wszystkich części
+    :return: Zwraca dict z częściami
+    """
+
+    res_conn = conn_cursor() # Połączenie z bazą danych
+    data_return = {}
+
+    # Jeśli nie zwróciło żadnego błędu
+    if res_conn.get('status'):
+        try:
+            cursor = res_conn['cursor']
+
+            cursor.execute("SELECT * FROM parts")
+            data_return['result'] = cursor.fetchall()
+            data_return['status'] = True
+
+        except Exception as error:
+            print('Błąd podczas zwracania rezultatu w return_parts, błąd:', error)
+            data_return['status'] = False
+            data_return['error'] = f'Błąd podczas zwracania rezultatu w return_parts, błąd: {error}'
+
+        finally:
+            conn = res_conn['conn']
+            close_connection(conn)
+
+    # Jeśli zwróciło błąd
+    else:
+        print('Błąd podczas zwracania rezultatu w return_parts')
+        data_return['status'] = False
+        data_return['error'] = 'Błąd podczas zwracania rezultatu w return_parts'
+
+    return data_return
+
+# Zwrócenie części
+def return_part(id_part: int) -> dict:
+    """
+    Zwrócenie części
+    :param id_part: Identyfikator części
+    :return: Zwraca dict z częściami
+    """
+
+    res_conn = conn_cursor() # Połączenie z bazą danych
+    data_return = {}
+
+    # Jeśli nie zwróciło żadnego błędu
+    if res_conn.get('status'):
+        try:
+            cursor = res_conn['cursor']
+
+            cursor.execute("SELECT * FROM parts WHERE id= ?", (id_part,))
+            data_return['result'] = cursor.fetchone()
+            data_return['status'] = True
+
+        except Exception as error:
+            print('Błąd podczas zwracania rezultatu w return_part, błąd:', error)
+            data_return['status'] = False
+            data_return['error'] = f'Błąd podczas zwracania rezultatu w return_part, błąd: {error}'
+
+        finally:
+            conn = res_conn['conn']
+            close_connection(conn)
+
+    # Jeśli zwróciło błąd
+    else:
+        print('Błąd podczas zwracania rezultatu w return_part')
+        data_return['status'] = False
+        data_return['error'] = 'Błąd podczas zwracania rezultatu w return_part'
+
+    return data_return
+
 # endregion
