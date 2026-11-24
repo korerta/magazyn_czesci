@@ -1,6 +1,7 @@
 """
 Serwer WWW
 """
+
 # region importy
 # Biblioteki
 from flask import Flask, render_template, request
@@ -206,6 +207,21 @@ def del_return_back_part(form: dict, change: int) -> dict:
 
     return data_return
 
+def find_part(form: dict) -> dict:
+    data_return = {'status': False}
+
+    id_part = form['id_search']
+
+    # region wysyłanie zapytania do bazy wraz z obsługą błędu
+    result = database.find_part(id_part)
+    if not result['status']:
+        data_return['message'] = result['error']
+    # endregion
+
+    data_return['part'] = result['result']
+    data_return['status'] = True
+
+    return  data_return
 
 # endregion
 
@@ -217,10 +233,14 @@ app = Flask(__name__)
 # Strona główna
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    return_data = {'form': '', 'parts': ''}
+    return_data = {'del_form': '', 'find_form': ''}
     # przesłanie formularza
     if request.form:
-        return_data['form'] = del_return_back_part(request.form, 1)
+        if 'id_search' in request.form:
+            return_data['find_form'] = find_part(request.form)
+
+        if 'part_id' in request.form:
+            return_data['del_form'] = del_return_back_part(request.form, 1)
 
     return_data['parts'] = return_parts(False)
     return render_template("index.html", data=return_data)

@@ -219,5 +219,41 @@ def return_part_back(id_part: int, change: int) -> bool:
         print('Błąd podczas zwracania rezultatu w return_part_back.')
         return False
 
+# Szukanie części
+def find_part(id_part) -> dict:
+    """
+    Szukanie części
+    :param id_part: ID części
+    :return: Zwraca dict
+    """
+
+    res_conn = conn_cursor() # Połączenie z bazą danych
+    data_return = {}
+
+    # Jeśli nie zwróciło żadnego błędu
+    if res_conn.get('status'):
+        try:
+            cursor = res_conn['cursor']
+
+            cursor.execute("SELECT * FROM parts WHERE deleted= 0 AND id= ? OR oem_number= ? OR uuid= ?", (id_part, id_part, id_part))
+            data_return['result'] = cursor.fetchone()
+            data_return['status'] = True
+
+        except Exception as error:
+            print('Błąd podczas zwracania rezultatu w find_part, błąd:', error)
+            data_return['status'] = False
+            data_return['error'] = f'Błąd podczas zwracania rezultatu w find_part, błąd: {error}'
+
+        finally:
+            conn = res_conn['conn']
+            close_connection(conn)
+
+    # Jeśli zwróciło błąd
+    else:
+        print('Błąd podczas zwracania rezultatu w find_part')
+        data_return['status'] = False
+        data_return['error'] = 'Błąd podczas zwracania rezultatu w find_part'
+
+    return data_return
 
 # endregion
