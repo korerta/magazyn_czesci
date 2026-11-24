@@ -17,7 +17,7 @@
         <a href="{{ url_for('basket') }}">Kosz</a><br>
         <form method="post">
             <h2>Wyszukaj część (numer OEM, Identyfikator...)</h2>
-            {{ data['find_form']['message'] }}<br>
+            {{ data['find_form']['message'] }} {{ data['find_form']['error'] }}<br>
             <input type="text" name="id_search" placeholder="ID części"/>
             <button type="submit">Wyszukaj część</button>
         </form><br>
@@ -35,19 +35,20 @@
                     <td>Czy zapakowano</td>
                     <td></td>
                 </tr>
+                {% for part in data['find_form']['result'] %}
                 <tr>
                     <form method="get" action="show_part">
-                        <td><input type="text" disabled value="{{ data['find_form']['part'][0] }}" /></td>
-                        <input type="hidden" name="part_id" value="{{ data['find_form']['part'][0] }}" />
-                        <td>{{ data['find_form']['part'][1] }}</td>
-                        <td>{{ data['find_form']['part'][2] }}</td>
-                        <td>{{ data['find_form']['part'][3] }}</td>
-                        <td>{{ data['find_form']['part'][4] }}</td>
-                        <td>{{ data['find_form']['part'][5] }}</td>
-                        <td>{{ data['find_form']['part'][6] }}</td>
-                        <td>{{ data['find_form']['part'][7] }}</td>
+                        <td><input type="text" disabled value="{{ part[0] }}" /></td>
+                        <input type="hidden" name="part_id" value="{{ part[0] }}" />
+                        <td>{{ part[1] }}</td>
+                        <td>{{ part[2] }}</td>
+                        <td>{{ part[3] }}</td>
+                        <td>{{ part[4] }}</td>
+                        <td>{{ part[5] }}</td>
+                        <td>{{ part[6] }}</td>
+                        <td>{{ part[7] }}</td>
                         <td>
-                            {% if data['find_form']['part'][8] == 0 %}
+                            {% if part[8] == 0 %}
                             {{ "NIE" }}
                             {% else %}
                             {{ "TAK" }}
@@ -56,19 +57,20 @@
                         <td><button type="submit">Wyświetl część</button></td>
                     </form>
                 </tr>
+                {% endfor %}
             </table>
         {% endif %}
 
         <form method="post">
             <h2>Usuń część z magazynu według Identyfikatora</h2>
-            {{ data['del_form']['message'] }}<br>
+            {{ data['del_form']['message'] }} {{ data['del_form']['error'] }}<br>
             <input type="text" name="part_id" placeholder="ID części"/>
             <button type="submit">Usuń część</button>
         </form><br>
     </div>
     <div id="parts">
         <center><h2>Dostępne części</h2></center>
-        {{ data['parts']['message'] }}
+        {{ data['parts_form']['error'] }}
         <table border="1">
             <tr>
                 <td>Identyfikator</td>
@@ -82,7 +84,7 @@
                 <td>Czy zapakowano</td>
                 <td></td>
             </tr>
-            {% for part in data['parts']['parts'] %}
+            {% for part in data['parts_form']['result'] %}
             <tr>
                 <form method="get" action="show_part">
                     <td><input type="text" disabled value="{{ part[0] }}" /></td>

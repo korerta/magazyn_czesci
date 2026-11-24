@@ -8,7 +8,6 @@ import sqlite3
 
 # Moje pliki
 from config import paths
-
 # endregion
 
 #region Funkcje wykorzystywane wiele razy
@@ -50,7 +49,7 @@ def conn_cursor() -> dict:
 
 # region Zapytania
 # Dodanie części do magazynu
-def add_part(name_part: str, desc_part: str, condition_part: str, oem_part: str, vehicle: str, location: str, is_wrapped: bool, uuid: str) -> bool:
+def add_part(name_part: str, desc_part: str, condition_part: str, oem_part: str, vehicle: str, location: str, is_wrapped: bool, uuid: str, time_add: str) -> bool:
     """
     Dodanie części do magazynu
     :param name_part: Nazwa części
@@ -61,6 +60,7 @@ def add_part(name_part: str, desc_part: str, condition_part: str, oem_part: str,
     :param location: Umiejscowienie w magazynie części
     :param is_wrapped: Czy część jest zapakowana
     :param uuid: Identyfikator wewnętrzny części
+    :param time_add: Czas dodania części
     :return: Zwraca bool czy się udało
     """
 
@@ -72,9 +72,12 @@ def add_part(name_part: str, desc_part: str, condition_part: str, oem_part: str,
         conn = data_conn_cursor['conn']
 
         try:
-            query = "INSERT INTO parts (name, description, condition, oem_number, vehicle, location, is_wrapped, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
-            cursor.execute(query, (name_part, desc_part, condition_part, oem_part, vehicle, location, is_wrapped, uuid))
+            query = "INSERT INTO parts (name, description, date, condition, oem_number, vehicle, location, is_wrapped, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
+            cursor.execute(query, (name_part, desc_part, time_add, condition_part, oem_part, vehicle, location, is_wrapped, uuid))
             conn.commit()
+
+            if not cursor.rowcount: return False  # jeśli żadnego wiersza nie zaktualizowano
+
             return True
 
         except Exception as error:
@@ -176,7 +179,7 @@ def return_part(id_part: int) -> dict:
 
     return data_return
 
-# Dodanie części z kosza do magazynu
+# Dodanie części z kosza do magazynu oraz na odwrót
 def return_part_back(id_part: int, change: int) -> bool:
     """
     Dodanie części do magazynu
@@ -196,6 +199,9 @@ def return_part_back(id_part: int, change: int) -> bool:
             query = "UPDATE parts SET deleted= ? WHERE id= ?"
             cursor.execute(query, (change, id_part,))
             conn.commit()
+
+            if not cursor.rowcount: return False # jeśli żadnego wiersza nie zaktualizowano
+
             return True
 
         except Exception as error:
@@ -236,7 +242,7 @@ def find_part(id_part) -> dict:
             cursor = res_conn['cursor']
 
             cursor.execute("SELECT * FROM parts WHERE deleted= 0 AND id= ? OR oem_number= ? OR uuid= ?", (id_part, id_part, id_part))
-            data_return['result'] = cursor.fetchone()
+            data_return['result'] = cursor.fetchall()
             data_return['status'] = True
 
         except Exception as error:

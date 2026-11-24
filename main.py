@@ -7,6 +7,7 @@ Serwer WWW
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 import uuid, os
+from datetime import datetime
 
 # Moje pliki
 from config import ip, port, debug, paths
@@ -38,7 +39,7 @@ def add_part_form(form: dict, files: dict) -> dict:
     for x in ('name_part', 'desc_part', 'condition_part', 'oem_part', 'vehicle', 'location'):
         if not x in form:
             print('Brakuje pola formularza', x)
-            data_return['message'] = f'Brakuje pola formularza {x}'
+            data_return['error'] = f'Brakuje pola formularza {x}'
             return data_return
     # endregion
 
@@ -53,7 +54,7 @@ def add_part_form(form: dict, files: dict) -> dict:
 
     except Exception as error:
         print(f'Jakieś pole formularza ma nieprawidłowy typ danych, błąd: {error}')
-        data_return['message'] = f'Jakieś pole formularza ma nieprawidłowy typ danych, błąd: {error}'
+        data_return['error'] = f'Jakieś pole formularza ma nieprawidłowy typ danych, błąd: {error}'
         return data_return
     # endregion
 
@@ -67,41 +68,54 @@ def add_part_form(form: dict, files: dict) -> dict:
 
     id_part = str(uuid.uuid4())  # ID nowego CV
 
+    # region czas dodania części do magazynu
+    now_full_time = datetime.now()
+    time_add = now_full_time.strftime("%Y-%m-%d %H:%M:%S")
+    # endregion
+
     # region tworzenie folderu dla części
     path = os.path.join(paths['photos_parts'], id_part)
-    os.makedirs(path, exist_ok=True)
+    try:
+        os.makedirs(path, exist_ok=True)
+
+    except Exception as error:
+        print(f'Błąd podczas tworzenia katalogu na grafiki części, błąd: {error}.')
+        data_return['error'] = f'Błąd podczas tworzenia katalogu na grafiki części, błąd: {error}.'
+        return data_return
     # endregion
 
     # region obsługa zdjęć
     for photo in files.getlist('photos'):
-        if not upload_file(photo, id_part):
-            data_return['message'] = 'Błąd podczas dodawania zdjęcia części.'
-            return data_return
+        if photo and photo.filename != '':
+            if not upload_file(photo, id_part):
+                data_return['error'] = 'Błąd podczas dodawania zdjęcia części.'
+                return data_return
     # endregion
 
     # region dodanie do bazy danych części
-    if database.add_part(name_part, desc_part, condition_part, oem_part, vehicle, location, is_wrapped, id_part):
+    if database.add_part(name_part, desc_part, condition_part, oem_part, vehicle, location, is_wrapped, id_part, time_add):
         data_return['message'] = 'Pomyślnie dodano część do magazynu.'
+        data_return['status'] = True
 
     else:
-        data_return['message'] = 'Błąd podczas dodawania części do magazynu.'
+        data_return['error'] = 'Błąd podczas dodawania części do magazynu.'
     # endregion
 
     return data_return
 
 def return_parts(deleted: bool) -> dict:
-    data_return = {'status': False}
+    data_return = {} # dane do zwrócenia
 
-    # region pobranie z bazy danych części oraz obsługa błędu
-    parts = database.return_parts(deleted)
-    if not parts['status']:
-        data_return['parts'] = ()
-        data_return['message'] = 'Wystąpił nieoczekiwany bład podczas pobierania części z bazy danych.'
-        print('Wystąpił nieoczekiwany bład podczas pobierania części z bazy danych.')
+    result = database.return_parts(deleted) # zapytanie do bazy danych
+
+    # region obsługa błędu
+    if not result['status']:
+        data_return['result'] = ()
+        data_return['error'] = result['error']
+        print(result['error'])
     # endregion
 
-    data_return['status'] = True
-    data_return['parts'] = parts['result']
+    data_return = result # wszystko git
 
     return data_return
 
@@ -110,11 +124,11 @@ def show_part_form(form: dict) -> dict:
     :param form: Formularz
     :return: Zwraca dict
     """
-    data_return = {'status': False}
+    data_return = {'status': False} # dane do zwrócenia
 
     # region czy jest w adresie URL Identyfikator części
     if not 'part_id' in form:
-        data_return['message'] = 'W adresie URL brak ID części'
+        data_return['error'] = 'W adresie URL brak ID części'
         return data_return
     # endregion
 
@@ -124,18 +138,18 @@ def show_part_form(form: dict) -> dict:
 
     except Exception as error:
         print(f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.')
-        data_return['message'] = f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.'
+        data_return['error'] = f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.'
         return data_return
     # endregion
 
-    # region pobranie z bazy danych części
-    result = database.return_part(id_part)
-    if not result['status']:
-        print('Błąd podczas pobierania części z bazy danych.')
-        data_return['message'] = 'Błąd podczas pobierania części z bazy danych.'
-        return data_return
+    result = database.return_part(id_part) # zapytanie do bazy danych
 
-    data_return['data'] = result['result']
+    data_return = result
+
+    # region obsługa błędu
+    if not result['status']:
+        print(result['error'])
+        return data_return
     # endregion
 
     uuid = result['result'][9] # UUID
@@ -159,13 +173,7 @@ def del_return_back_part(form: dict, change: int) -> dict:
     :return: Zwraca dict
     """
 
-    data_return = {'status': False}
-
-    # region czy jest w adresie URL Identyfikator części
-    if not 'part_id' in form:
-        data_return['message'] = 'Nie znaleziono ID części'
-        return data_return
-    # endregion
+    data_return = {'status': False, 'error': '', 'message': ''}
 
     # region czy Identyfikator części jest liczbą
     try:
@@ -173,25 +181,26 @@ def del_return_back_part(form: dict, change: int) -> dict:
 
     except Exception as error:
         print(f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.')
-        data_return['message'] = f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.'
+        data_return['error'] = f'Identyfikator części nie jest liczbą całkowitą, błąd: {error}.'
         return data_return
     # endregion
 
     # region walidacja zmiennej change
     if change != 0 and change != 1:
         print('Nieprawidłowa wartość w polu part_id.')
-        data_return['message'] = 'Nieprawidłowa wartość w polu part_id.'
+        data_return['error'] = 'Nieprawidłowa wartość w polu part_id.'
+        return data_return
     # endregion
 
     # region czy się udało przywrócić/usunąć część
     if not database.return_part_back(id_part, change):
         if not change:
-            print('Błąd podczas przywracania z kosza części do magazynu.')
-            data_return['message'] = 'Błąd podczas przywracania z kosza części do magazynu.'
+            print('Błąd podczas przywracania części z kosza do magazynu.')
+            data_return['error'] = 'Błąd podczas przywracania części z kosza do magazynu.'
 
         else:
             print('Błąd podczas usuwania części z magazynu.')
-            data_return['message'] = 'Błąd podczas usuwania części z magazynu.'
+            data_return['error'] = 'Błąd podczas usuwania części z magazynu.'
 
     else:
         if not change:
@@ -199,29 +208,28 @@ def del_return_back_part(form: dict, change: int) -> dict:
 
         else:
             data_return['message'] = 'Pomyślnie usunięto część z magazynu.'
+
+        data_return['status'] = True
     # endregion
-
-        return data_return
-
-    data_return['status'] = True
 
     return data_return
 
 def find_part(form: dict) -> dict:
-    data_return = {'status': False}
+    data_return = {} # dane do zwrócenia
 
-    id_part = form['id_search']
+    id_part = form['id_search'] # zmienna z ID części
 
-    # region wysyłanie zapytania do bazy wraz z obsługą błędu
-    result = database.find_part(id_part)
+    result = database.find_part(id_part) # zapytanie do bazy danych
+
+    # region jeśli wystąpił błąd
     if not result['status']:
-        data_return['message'] = result['error']
+        data_return['error'] = result['error']
+        print(result['error'])
     # endregion
 
-    data_return['part'] = result['result']
-    data_return['status'] = True
+    data_return = result # wszystko git
 
-    return  data_return
+    return data_return
 
 # endregion
 
@@ -242,13 +250,15 @@ def home():
         if 'part_id' in request.form:
             return_data['del_form'] = del_return_back_part(request.form, 1)
 
-    return_data['parts'] = return_parts(False)
+    return_data['parts_form'] = return_parts(False)
+
     return render_template("index.html", data=return_data)
 
 # Dodaj część
 @app.route("/add_part", methods=['GET', 'POST'])
 def add_part():
-    return_data = []
+    return_data = {}
+
     # przesłanie formularza
     if request.form:
         return_data = add_part_form(request.form, request.files)
@@ -258,7 +268,8 @@ def add_part():
 # Wyświetl część
 @app.route("/show_part", methods=['GET', 'POST'])
 def show_part():
-    return_data = []
+    return_data = {}
+
     # przesłanie formularza
     if request.args:
         return_data = show_part_form(request.args)
@@ -268,11 +279,17 @@ def show_part():
 # Kosz
 @app.route("/basket", methods=['GET', 'POST'])
 def basket():
-    parts = return_parts(True)
+    parts = {
+        'parts': return_parts(True),
+        'form_back_part': {
+            'error': '',
+            'message': ''
+        }
+    }
+
     if request.form:
         result = del_return_back_part(request.form, 0)
-
-        parts['message'] = result['message']
+        parts['form_back_part'] = result
 
     return render_template("basket.html", data=parts)
 

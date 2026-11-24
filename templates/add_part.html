@@ -15,7 +15,7 @@
 
     <h1>Dodaj część do magazynu</h1><br>
     <form method="post" enctype="multipart/form-data">
-        {{ data['message'] }}
+        {{ data['message'] }} {{ data['error'] }}
         <input type="text" class="text" name="name_part" placeholder="Nazwa części"/>
         <input type="text" class="text" name="desc_part" placeholder="Opis części"/>
         <input type="text" class="text" name="condition_part" placeholder="Stan części (uszkodzony, nowy itp)"/>

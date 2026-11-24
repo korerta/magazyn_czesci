@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ data['data'][1] }}</title>
+    <title>{{ data['result'][1] }}</title>
 </head>
 <body>
     <style>
@@ -13,6 +13,8 @@
     </style>
 
     <a href="{{ url_for('home') }}">Strona główna</a><br><br>
+
+    {{ data['message'] }} {{ data['error'] }}<br><br>
 
     <table border="1">
         <tr>
@@ -27,16 +29,16 @@
             <td>Czy zapakowano</td>
         </tr>
         <tr>
-            <td><input type="text" disabled value="{{ data['data'][0] }}" /></td>
-            <td>{{ data['data'][1] }}</td>
-            <td>{{ data['data'][2] }}</td>
-            <td>{{ data['data'][3] }}</td>
-            <td>{{ data['data'][4] }}</td>
-            <td>{{ data['data'][5] }}</td>
-            <td>{{ data['data'][6] }}</td>
-            <td>{{ data['data'][7] }}</td>
+            <td><input type="text" disabled value="{{ data['result'][0] }}" /></td>
+            <td>{{ data['result'][1] }}</td>
+            <td>{{ data['result'][2] }}</td>
+            <td>{{ data['result'][3] }}</td>
+            <td>{{ data['result'][4] }}</td>
+            <td>{{ data['result'][5] }}</td>
+            <td>{{ data['result'][6] }}</td>
+            <td>{{ data['result'][7] }}</td>
             <td>
-                {% if data['data'][8] == 0 %}
+                {% if data['result'][8] == 0 %}
                 {{ "NIE" }}
                 {% else %}
                 {{ "TAK" }}

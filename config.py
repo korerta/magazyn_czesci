@@ -5,7 +5,6 @@ Plik konfiguracyjny
 # Biblioteki
 import os
 from typing import Dict
-
 # endregion
 
 ip = '0.0.0.0'

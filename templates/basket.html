@@ -8,7 +8,7 @@
     <a href="{{ url_for('home') }}">Strona główna</a><br>
 
     <center><h2>Usunięte części</h2></center>
-    {{ data['message'] }}
+    {{ data['form_back_part']['message'] }} {{ data['form_back_part']['error'] }}
     <table border="1">
         <tr>
             <td>Identyfikator</td>
@@ -22,7 +22,7 @@
             <td>Czy zapakowano</td>
             <td></td>
         </tr>
-        {% for part in data['parts'] %}
+        {% for part in data['parts']['result'] %}
         <tr>
             <form method="post">
                 <td><input type="text" disabled value="{{ part[0] }}" /></td>
