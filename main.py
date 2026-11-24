@@ -151,9 +151,10 @@ def show_part_form(form: dict) -> dict:
 
     return data_return
 
-def return_back_part(form: dict) -> dict:
+def del_return_back_part(form: dict, change: int) -> dict:
     """
     :param form: Formularz
+    :param change: Zmienić wartość na 1 czy 0
     :return: Zwraca dict
     """
 
@@ -175,14 +176,33 @@ def return_back_part(form: dict) -> dict:
         return data_return
     # endregion
 
-    # region czy się udało przywrócić część z kosza do magazynu
-    if not database.return_part_back(id_part):
-        print('Błąd podczas przywracania z kosza części do magazynu.')
-        data_return['message'] = 'Błąd podczas przywracania z kosza części do magazynu.'
+    # region walidacja zmiennej change
+    if change != 0 and change != 1:
+        print('Nieprawidłowa wartość w polu part_id.')
+        data_return['message'] = 'Nieprawidłowa wartość w polu part_id.'
+    # endregion
+
+    # region czy się udało przywrócić/usunąć część
+    if not database.return_part_back(id_part, change):
+        if not change:
+            print('Błąd podczas przywracania z kosza części do magazynu.')
+            data_return['message'] = 'Błąd podczas przywracania z kosza części do magazynu.'
+
+        else:
+            print('Błąd podczas usuwania części z magazynu.')
+            data_return['message'] = 'Błąd podczas usuwania części z magazynu.'
+
+    else:
+        if not change:
+            data_return['message'] = 'Pomyślnie przywrócono z kosza część.'
+
+        else:
+            data_return['message'] = 'Pomyślnie usunięto część z magazynu.'
+    # endregion
+
         return data_return
 
     data_return['status'] = True
-    data_return['message'] = 'Pomyślnie przywrócono z kosza część.'
 
     return data_return
 
@@ -197,8 +217,13 @@ app = Flask(__name__)
 # Strona główna
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    parts = return_parts(False)
-    return render_template("index.html", data=parts)
+    return_data = {'form': '', 'parts': ''}
+    # przesłanie formularza
+    if request.form:
+        return_data['form'] = del_return_back_part(request.form, 1)
+
+    return_data['parts'] = return_parts(False)
+    return render_template("index.html", data=return_data)
 
 # Dodaj część
 @app.route("/add_part", methods=['GET', 'POST'])
@@ -225,7 +250,7 @@ def show_part():
 def basket():
     parts = return_parts(True)
     if request.form:
-        result = return_back_part(request.form)
+        result = del_return_back_part(request.form, 0)
 
         parts['message'] = result['message']
 

@@ -22,7 +22,8 @@
         </form><br>
         <form method="post">
             <h2>Usuń część z magazynu według Identyfikatora</h2>
-            <input type="text" name="id_del" placeholder="ID części"/>
+            {{ data['form']['message'] }}<br>
+            <input type="text" name="part_id" placeholder="ID części"/>
             <button type="submit">Usuń część</button>
         </form><br>
     </div>
@@ -42,7 +43,7 @@
                 <td>Czy zapakowano</td>
                 <td></td>
             </tr>
-            {% for part in data['parts'] %}
+            {% for part in data['parts']['parts'] %}
             <tr>
                 <form method="get" action="show_part">
                     <td><input type="text" disabled value="{{ part[0] }}" /></td>

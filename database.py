@@ -177,10 +177,11 @@ def return_part(id_part: int) -> dict:
     return data_return
 
 # Dodanie części z kosza do magazynu
-def return_part_back(id_part: int) -> bool:
+def return_part_back(id_part: int, change: int) -> bool:
     """
     Dodanie części do magazynu
     :param id_part: Identyfikator części
+    :param change: Zmienić wartość na 1 czy 0
     :return: Zwraca bool czy się udało
     """
 
@@ -192,8 +193,8 @@ def return_part_back(id_part: int) -> bool:
         conn = data_conn_cursor['conn']
 
         try:
-            query = "UPDATE parts SET deleted= 0 WHERE id= ?"
-            cursor.execute(query, (id_part,))
+            query = "UPDATE parts SET deleted= ? WHERE id= ?"
+            cursor.execute(query, (change, id_part,))
             conn.commit()
             return True
 
